@@ -1,5 +1,7 @@
-from pydantic import BaseModel, EmailStr
 from uuid import UUID
+
+from pydantic import BaseModel, EmailStr
+
 from core.entities.client import Client
 
 
