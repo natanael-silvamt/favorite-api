@@ -4,6 +4,9 @@
 setup: poetry.lock pyproject.toml .ensure-poetry
 	@poetry install
 
+run:
+	@poetry run uvicorn main:app --reload
+
 coverage:
 	@poetry run pytest -k 'not test_integration' --cov=apps --cov=src --cov-report=term-missing --cov-report=xml ./tests/
 
