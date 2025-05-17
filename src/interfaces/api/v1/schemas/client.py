@@ -12,7 +12,3 @@ class ClientOut(BaseModel):
     id: UUID
     name: str
     email: str
-    
-    @classmethod
-    def from_entity(cls, client: Client) -> "ClientOut":
-        return cls(**client.__dict__)

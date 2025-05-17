@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from pydantic import UUID4
 
-from core.entities.client import Client
+from src.core.entities.client import Client
 
 
 class ClientRepository(ABC):
@@ -11,7 +11,7 @@ class ClientRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_by_id(self: 'ClientRepository', client_id: UUID4) -> Client | None:
+    async def get_by_id(self: 'ClientRepository', id: UUID4) -> Client | None:
         pass
 
     @abstractmethod
@@ -23,5 +23,5 @@ class ClientRepository(ABC):
         pass
 
     @abstractmethod
-    async def delete(self: 'ClientRepository', client_id: UUID4) -> None:
+    async def delete(self: 'ClientRepository', id: UUID4) -> None:
         pass
