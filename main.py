@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.routers import api_router
 from src.database import init_db
+from src.routers import api_router
 
 app = FastAPI(
     title="Favorite API",
@@ -20,8 +20,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.on_event("startup")
 async def startup_event():
     await init_db()
+
 
 app.include_router(api_router, prefix="/favorite/v0")

@@ -1,12 +1,14 @@
-import uuid
-from fastapi import Depends
 from typing import Annotated
+
+from fastapi import Depends
+from pydantic import UUID4
 from sqlmodel import Session
 
-from src.exceptions import ClientNotFoundError, DuplicateEmailError
+from src.client.exceptions import ClientNotFound, DuplicateEmail
+from src.client.models import Client
 from src.client.repository import ClientRepository, client_repository
 from src.client.schemas import ClientIn, ClientOut
-from src.client.models import Client
+from src.contrib.exceptions import NotFoundException, UniqueViolation
 
 
 class ClientUseCases:
@@ -14,38 +16,54 @@ class ClientUseCases:
         self.repository = repository
 
     async def create(self: 'ClientUseCases', db: Session, client_in: ClientIn) -> ClientOut:
-        # if await self.repository.get_by_email(email=client_in.email):
-        #     raise DuplicateEmailError()
-
-        #new_client = await self.repository.create(client=Client(**client_in.model_dump()))
         client_model = Client(**client_in.model_dump())
 
-        new_client = await self.repository.create(db=db, model=client_model)
+        try:
+            new_client = await self.repository.create(db=db, model=client_model)
+        except UniqueViolation as ex:
+            raise DuplicateEmail(f'Email {client_in.email} already exists')
 
         return ClientOut(id=new_client.id, **client_in.model_dump())
 
-    # async def get(self: 'UseCases', id: UUID4) -> ClientOut:
-    #     client = await self.repository.get_by_id(id=id)
+    async def get(self: 'ClientUseCases', db: Session, id: UUID4) -> ClientOut:
+        try:
+            client = await self.repository.get(db=db, id=id)
+        except NotFoundException as ex:
+            raise ClientNotFound(message=f'Client with id {id} not found')
 
-    #     if not client:
-    #         raise ClientNotFoundError()
+        if not client.is_active:
+            raise ClientNotFound(message=f'Client with id {id} not found')
 
-    #     return ClientOut(**client.model_dump())
+        return ClientOut(**client.model_dump())
 
-    # async def update(self: 'UseCases', id: UUID4, client_in: ClientIn) -> ClientOut:
-    #     client = await self.get(id=id)
+    async def get_by_email(self: 'ClientUseCases', db: Session, email: str) -> ClientOut:
+        try:
+            client = await self.repository.get_by_email(db=db, email=email)
+        except NotFoundException as ex:
+            raise ClientNotFound(message=f'Client with email {email} not found')
 
-    #     if client_in.email != client.email and await self.repository.get_by_email(email=client_in.email):
-    #         raise DuplicateEmailError()
+        if not client.is_active:
+            raise ClientNotFound(message=f'Client with email {email} not found')
 
-    #     new_client = Client(id=client.id, **client_in.model_dump())
+        return ClientOut(**client.model_dump())
 
-    #     client = await self.repository.update(client=new_client)
+    async def update(self: 'ClientUseCases', db: Session, id: UUID4, client_in: ClientIn) -> ClientOut:
+        client = await self.get(db=db, id=id)
 
-    #     return ClientOut(**client.model_dump())
+        if client_in.email != client.email and await self.repository.get_by_email(email=client_in.email):
+            raise DuplicateEmail(f'Email {client_in.email} already exists')
 
-    # async def delete_client(self: 'UseCases', id: UUID4) -> None:
-    #     await self.repository.delete(id=id)
+        new_client = Client(id=client.id, **client_in.model_dump())
+
+        client_updated = await self.repository.update(db=db, model_db=client, model=new_client)
+
+        return ClientOut(**client_updated.model_dump())
+
+    async def delete(self: 'ClientUseCases', db: Session, id: UUID4) -> None:
+        try:
+            await self.repository.delete(db=db, id=id)
+        except NotFoundException as ex:
+            raise ClientNotFound(message=f'Client with id {id} not found')
 
 
 async def client_usecase() -> ClientUseCases:

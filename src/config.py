@@ -31,4 +31,5 @@ class Settings(BaseSettings):
             path=self.POSTGRES_DB,
         )
 
+
 settings = Settings()  # type: ignore

@@ -1,55 +1,61 @@
-from typing import TypeVar, Generic, Optional
+from typing import TypeVar
 from uuid import UUID
-from sqlmodel import Session
+
+from sqlalchemy import update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.future import select
-from sqlalchemy import update, delete
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from src.contrib.exceptions import NotFoundException, UniqueViolation
 
 ModelType = TypeVar('ModelType')
 
 
 class RepositoryBase:
-    async def create(self: 'RepositoryBase', db: Session, model: type[ModelType]) -> ModelType:
-        db.add(model)
-        await db.commit()
-        await db.refresh(model)
+
+    def __init__(self, model: type[ModelType]) -> None:
+        self.model = model
+
+    async def create(self: 'RepositoryBase', db: AsyncSession, model: type[ModelType]) -> ModelType:
+        try:
+            db.add(model)
+            await db.commit()
+            await db.refresh(model)
+        except IntegrityError:
+            await db.rollback()
+            raise UniqueViolation(f"Unique constraint violated for {model.email}")
 
         return model
 
-    # async def get(self, db: AsyncSession, id: UUID) -> Optional[ModelType]:
-    #     result = await db.execute(
-    #         select(self.model).where(self.model.id == id)  # type: ignore
-    #     return result.scalars().first()
+    async def get(self, db: AsyncSession, id: UUID) -> ModelType:
+        statement = select(self.model).where(self.model.id == id)
+        result = await db.exec(statement)
+        result = result.scalar_one_or_none()
 
-    # async def get_multi(
-    #     self, 
-    #     db: AsyncSession, 
-    #     *, 
-    #     skip: int = 0, 
-    #     limit: int = 100
-    # ) -> List[ModelType]:
-    #     result = await db.execute(
-    #         select(self.model).offset(skip).limit(limit))  # type: ignore
-    #     return result.scalars().all()
+        if result is None:
+            raise NotFoundException(f"Object with id {id} not found")
 
-    # async def update(
-    #     self, 
-    #     db: AsyncSession, 
-    #     *, 
-    #     db_obj: ModelType, 
-    #     obj_in: PydanticModel
-    # ) -> ModelType:
-    #     update_data = obj_in.dict(exclude_unset=True)
-    #     await db.execute(
-    #         update(self.model)
-    #         .where(self.model.id == db_obj.id)  # type: ignore
-    #         .values(**update_data)
-    #     )
-    #     await db.commit()
-    #     await db.refresh(db_obj)
-    #     return db_obj
+        return result
 
-    # async def delete(self, db: AsyncSession, *, id: UUID) -> None:
-    #     await db.execute(
-    #         delete(self.model).where(self.model.id == id))  # type: ignore
-    #     )
-    #     await db.commit()
+    async def update(self, db: AsyncSession, model_db: ModelType, model: ModelType) -> ModelType:
+        update_data = model.model_dump()
+
+        updated = update(self.model).where(self.model.id == model_db.id).values(**update_data)
+
+        result = await db.exec(updated)
+
+        if result.rowcount == 0:
+            raise NotFoundException(f"Object with id {model_db.id} not found")
+
+        await db.commit()
+
+        return model
+
+    async def delete(self, db: AsyncSession, id: UUID) -> None:
+        updated = update(self.model).where(self.model.id == id).values(is_active=False)
+        result = await db.exec(updated)
+
+        if result.rowcount == 0:
+            raise NotFoundException(f"Object with id {id} not found")
+
+        await db.commit()
