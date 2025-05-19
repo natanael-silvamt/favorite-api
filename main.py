@@ -1,13 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.interfaces.api.v1.routers import api_router
+from src.routers import api_router
+from src.database import init_db
 
 app = FastAPI(
     title="Favorite API",
     description="API for managing clients and their favorite products",
     version="0.0.1",
-    openapi_url="/api/v1/openapi.json",
+    openapi_url="/favorite/v0/openapi.json",
 )
 
 
@@ -19,5 +20,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    await init_db()
 
-app.include_router(api_router, prefix="/api/v1/favorite")
+app.include_router(api_router, prefix="/favorite/v0")
