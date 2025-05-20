@@ -54,4 +54,4 @@ run-migrations:
 	@poetry run alembic upgrade head
 
 create-migrations:
-	@poetry run alembic revision --autogenerate -m "$(MSG)"
+	@poetry run alembic revision --autogenerate -m $(M)

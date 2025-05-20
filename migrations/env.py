@@ -21,6 +21,7 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 
 from src.client.models import SQLModel  # noqa
+from src.favorite.models import SQLModel  # noqa
 from src.config import settings  # noqa
 
 target_metadata = SQLModel.metadata
