@@ -5,10 +5,10 @@ from http import HTTPStatus
 from typing import Any
 
 import httpx
-from pydantic import BaseModel, AnyUrl
+from pydantic import AnyUrl, BaseModel
 
-from src.contrib.schemas import Config, Method, Response
 from src.contrib.exceptions import RequestError
+from src.contrib.schemas import Config, Method, Response
 
 
 class Client:

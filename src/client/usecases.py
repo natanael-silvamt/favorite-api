@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import Depends
@@ -23,7 +24,7 @@ class ClientUseCases:
         except UniqueViolation as ex:
             raise DuplicateEmail(f'Email {client_in.email} already exists')
 
-        return ClientOut(id=new_client.id, **client_in.model_dump())
+        return ClientOut(**new_client.model_dump())
 
     async def get(self: 'ClientUseCases', db: Session, id: UUID4) -> ClientOut:
         try:
@@ -53,7 +54,12 @@ class ClientUseCases:
         if client_in.email != client.email and await self.repository.get_by_email(email=client_in.email):
             raise DuplicateEmail(f'Email {client_in.email} already exists')
 
-        new_client = Client(id=client.id, **client_in.model_dump())
+        new_client = Client(
+            id=client.id,
+            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.fromisoformat(client.created_at),
+            **client_in.model_dump(),
+        )
 
         client_updated = await self.repository.update(db=db, model_db=client, model=new_client)
 

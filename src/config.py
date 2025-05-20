@@ -30,7 +30,7 @@ class Settings(BaseSettings):
             port=self.POSTGRES_PORT,
             path=self.POSTGRES_DB,
         )
-    
+
     RETRY_ATTEMPTS: int = 3
     BASE_URL_PRODUCTS: str = 'https://fakestoreapi.com/products'
 

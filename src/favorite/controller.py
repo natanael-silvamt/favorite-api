@@ -2,10 +2,10 @@ from fastapi import APIRouter, Body, status
 from fastapi.exceptions import HTTPException
 from pydantic import UUID4
 
+from src.database import SessionDependency
 from src.favorite.exceptions import FavoriteAlreadyExists, FavoriteNotFound
 from src.favorite.schemas import FavoriteIn, FavoriteOut
 from src.favorite.usecases import FavoriteUseCaseDependency
-from src.database import SessionDependency
 
 router = APIRouter(tags=['favorites'])
 
@@ -62,3 +62,36 @@ async def get_by_client_id(
     favorites = await use_case.get_by_client_id(db=session, client_id=client_id)
 
     return favorites
+
+
+@router.delete(
+    '/favorites/{id}',
+    summary='Delete favorite by id',
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete(
+    session: SessionDependency,
+    use_case: FavoriteUseCaseDependency,
+    id: UUID4,
+) -> None:
+    try:
+        await use_case.delete(db=session, id=id)
+    except FavoriteNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)
+
+
+@router.delete(
+    '/favorites/{product_id}/clients/{client_id}',
+    summary='Delete favorite by client_id and product_id',
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_by_client_and_product(
+    session: SessionDependency,
+    use_case: FavoriteUseCaseDependency,
+    product_id: int,
+    client_id: UUID4,
+) -> None:
+    try:
+        await use_case.delete_by_client_and_product(db=session, client_id=client_id, product_id=product_id)
+    except FavoriteNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)

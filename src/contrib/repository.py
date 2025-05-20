@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import TypeVar
 from uuid import UUID
 
@@ -52,7 +53,9 @@ class RepositoryBase:
         return model
 
     async def delete(self, db: AsyncSession, id: UUID) -> None:
-        updated = update(self.model).where(self.model.id == id).values(is_active=False)
+        updated = (
+            update(self.model).where(self.model.id == id).values(is_active=False, deleted_at=datetime.now(timezone.utc))
+        )
         result = await db.exec(updated)
 
         if result.rowcount == 0:
