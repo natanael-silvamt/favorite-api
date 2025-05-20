@@ -6,6 +6,7 @@ from src.client.exceptions import ClientNotFound, DuplicateEmail
 from src.client.schemas import ClientIn, ClientOut
 from src.client.usecases import ClientUseCaseDependency
 from src.database import SessionDependency
+from src.dependencies import CurrentUserDependency
 
 router = APIRouter(tags=['clients'])
 
@@ -19,6 +20,7 @@ router = APIRouter(tags=['clients'])
 async def post(
     session: SessionDependency,
     use_case: ClientUseCaseDependency,
+    _: CurrentUserDependency,
     client_in: ClientIn = Body(...),
 ) -> ClientOut:
     try:
@@ -38,6 +40,7 @@ async def get(
     session: SessionDependency,
     id: UUID4,
     use_case: ClientUseCaseDependency,
+    _: CurrentUserDependency,
 ) -> ClientOut:
     try:
         return await use_case.get(db=session, id=id)
@@ -54,6 +57,7 @@ async def get_by_email(
     session: SessionDependency,
     email: str,
     use_case: ClientUseCaseDependency,
+    _: CurrentUserDependency,
 ) -> ClientOut:
     try:
         return await use_case.get_by_email(db=session, email=email)
@@ -71,6 +75,7 @@ async def put(
     session: SessionDependency,
     id: UUID4,
     use_case: ClientUseCaseDependency,
+    _: CurrentUserDependency,
     client_in: ClientIn = Body(...),
 ) -> ClientOut:
     try:
@@ -90,6 +95,7 @@ async def delete(
     session: SessionDependency,
     id: UUID4,
     use_case: ClientUseCaseDependency,
+    _: CurrentUserDependency,
 ) -> None:
     try:
         await use_case.delete(db=session, id=id)

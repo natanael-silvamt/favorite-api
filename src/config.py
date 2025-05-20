@@ -1,3 +1,5 @@
+import secrets
+
 from pydantic import (
     PostgresDsn,
     computed_field,
@@ -33,6 +35,12 @@ class Settings(BaseSettings):
 
     RETRY_ATTEMPTS: int = 3
     BASE_URL_PRODUCTS: str = 'https://fakestoreapi.com/products'
+
+    SECRET_KEY: str = secrets.token_urlsafe(32)
+
+    API_BASE_URL: str = '/favorite/v0'
+
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
 
 
 settings = Settings()  # type: ignore

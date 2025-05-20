@@ -3,6 +3,7 @@ from fastapi.exceptions import HTTPException
 from pydantic import UUID4
 
 from src.database import SessionDependency
+from src.dependencies import CurrentUserDependency
 from src.favorite.exceptions import FavoriteAlreadyExists, FavoriteNotFound
 from src.favorite.schemas import FavoriteIn, FavoriteOut
 from src.favorite.usecases import FavoriteUseCaseDependency
@@ -19,6 +20,7 @@ router = APIRouter(tags=['favorites'])
 async def post(
     session: SessionDependency,
     use_case: FavoriteUseCaseDependency,
+    _: CurrentUserDependency,
     favorite_in: FavoriteIn = Body(...),
 ) -> FavoriteOut:
     try:
@@ -39,6 +41,7 @@ async def get(
     session: SessionDependency,
     use_case: FavoriteUseCaseDependency,
     id: UUID4,
+    _: CurrentUserDependency,
 ) -> FavoriteOut:
     try:
         favorite = await use_case.get(db=session, id=id)
@@ -58,6 +61,7 @@ async def get_by_client_id(
     session: SessionDependency,
     use_case: FavoriteUseCaseDependency,
     client_id: UUID4,
+    _: CurrentUserDependency,
 ) -> list[FavoriteOut] | list:
     favorites = await use_case.get_by_client_id(db=session, client_id=client_id)
 
@@ -73,6 +77,7 @@ async def delete(
     session: SessionDependency,
     use_case: FavoriteUseCaseDependency,
     id: UUID4,
+    _: CurrentUserDependency,
 ) -> None:
     try:
         await use_case.delete(db=session, id=id)
@@ -90,6 +95,7 @@ async def delete_by_client_and_product(
     use_case: FavoriteUseCaseDependency,
     product_id: int,
     client_id: UUID4,
+    _: CurrentUserDependency,
 ) -> None:
     try:
         await use_case.delete_by_client_and_product(db=session, client_id=client_id, product_id=product_id)
