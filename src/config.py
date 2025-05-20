@@ -1,6 +1,7 @@
 import secrets
 
 from pydantic import (
+    EmailStr,
     PostgresDsn,
     computed_field,
 )
@@ -41,6 +42,9 @@ class Settings(BaseSettings):
     API_BASE_URL: str = '/favorite/v0'
 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
+
+    FIRST_SUPERUSER: EmailStr
+    FIRST_SUPERUSER_PASSWORD: str
 
 
 settings = Settings()  # type: ignore
