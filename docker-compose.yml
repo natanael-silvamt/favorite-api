@@ -41,6 +41,14 @@ services:
       interval: 5s
       timeout: 3s
       retries: 3
+  
+  unit-tests:
+    build: .
+    command: bash -c "pip install --upgrade pip && pip install poetry && poetry config virtualenvs.create false && poetry install --no-root && poetry run pytest"
+    volumes:
+      - ./:/app
+    environment:
+      - PYTHONPATH=/app
 
 volumes:
   postgres_data:
