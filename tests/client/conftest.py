@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-from pytest_mock import MockerFixture
 
 from src.client.models import Client
 from src.client.repository import ClientRepository
@@ -13,16 +12,6 @@ from tests.client.factories import client_in_data, client_out_data
 @pytest.fixture
 def client_out():
     return ClientOut(**client_out_data())
-
-
-@pytest.fixture
-async def mock_usecase_create(mocker: MockerFixture, client_out):
-    return mocker.patch.object(ClientUseCases, 'create', return_value=client_out)
-
-
-@pytest.fixture
-def post_url():
-    return f'/v0/clients'
 
 
 @pytest.fixture

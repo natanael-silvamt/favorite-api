@@ -1,10 +1,5 @@
 def user_in_data():
-    return {
-        'email': 'john@gmail.com',
-        'full_name': 'John Doe',
-        'hashed_password': '12345',
-        'is_superuser': True
-    }
+    return {'email': 'john@gmail.com', 'full_name': 'John Doe', 'hashed_password': '12345', 'is_superuser': True}
 
 
 def user_out_data():
@@ -13,5 +8,5 @@ def user_out_data():
         'email': 'john@gmail.com',
         'full_name': 'John Doe',
         'hashed_password': '12345',
-        'is_superuser': True
+        'is_superuser': True,
     }

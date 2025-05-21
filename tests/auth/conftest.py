@@ -1,12 +1,12 @@
-import pytest
 from unittest.mock import MagicMock
 from uuid import UUID
 
-from src.auth.repository import AuthRepository
-from src.auth.usecases import AuthUseCases
-from src.auth.schemas import UserIn, UserOut
-from src.auth.models import User
+import pytest
 
+from src.auth.models import User
+from src.auth.repository import AuthRepository
+from src.auth.schemas import UserIn, UserOut
+from src.auth.usecases import AuthUseCases
 from tests.auth.factories import user_in_data, user_out_data
 
 
