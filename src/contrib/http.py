@@ -9,9 +9,10 @@ from pydantic import AnyUrl, BaseModel
 
 from src.contrib.exceptions import RequestError
 from src.contrib.schemas import Config, Method, Response
+from src.contrib.singleton import SingletonMixin
 
 
-class Client:
+class Client(SingletonMixin):
     config: Config = Config()
 
     TIMEOUT = 5

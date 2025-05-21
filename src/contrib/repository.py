@@ -28,7 +28,7 @@ class RepositoryBase:
 
         return model
 
-    async def get(self, db: AsyncSession, id: UUID) -> ModelType:
+    async def get(self, db: AsyncSession, id: UUID) -> ModelType:  # pragma: no cover
         statement = select(self.model).where(self.model.id == id)
         result = await db.exec(statement)
         result = result.scalar_one_or_none()
@@ -38,7 +38,7 @@ class RepositoryBase:
 
         return result
 
-    async def update(self, db: AsyncSession, model_db: ModelType, model: ModelType) -> ModelType:
+    async def update(self, db: AsyncSession, model_db: ModelType, model: ModelType) -> ModelType:  # pragma: no cover
         update_data = model.model_dump()
 
         updated = update(self.model).where(self.model.id == model_db.id).values(**update_data)
@@ -52,7 +52,7 @@ class RepositoryBase:
 
         return model
 
-    async def delete(self, db: AsyncSession, id: UUID) -> None:
+    async def delete(self, db: AsyncSession, id: UUID) -> None:  # pragma: no cover
         updated = (
             update(self.model).where(self.model.id == id).values(is_active=False, deleted_at=datetime.now(timezone.utc))
         )

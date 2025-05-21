@@ -1,10 +1,11 @@
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends
 from pydantic import UUID4
 from sqlmodel import Session
 
 from src.config import settings
+from src.contrib.cache import get_product_from_cache, set_product_in_cache
 from src.contrib.exceptions import NotFoundException, UniqueViolation
 from src.contrib.http import Client as HttpClient
 from src.contrib.schemas import Config as HttpConfig
@@ -28,14 +29,7 @@ class FavoriteUseCases:
                 f'Favorite with client_id {favorite_in.client_id} and product_id {favorite_in.product_id} already exists'
             )
 
-        endpoint = f'{settings.BASE_URL_PRODUCTS}/{favorite_in.product_id}'
-
-        response = await self.client.get(endpoint=endpoint)
-
-        product = response.content
-
-        if not product:
-            raise NotFoundException(f'Product with id {favorite_in.product_id} not found')
+        product = await self._get_product(product_id=favorite_in.product_id)
 
         favorite_model = Favorite(client_id=favorite_in.client_id, product_id=favorite_in.product_id)
 
@@ -62,9 +56,7 @@ class FavoriteUseCases:
         except NotFoundException:
             raise FavoriteNotFound(f'Favorite with id {id} not found')
 
-        endpoint = f'{settings.BASE_URL_PRODUCTS}/{favorite.product_id}'
-        response = await self.client.get(endpoint=endpoint)
-        product = response.content
+        product = await self._get_product(product_id=favorite.product_id)
 
         favorite_out = FavoriteOut(
             **favorite.model_dump(),
@@ -76,8 +68,10 @@ class FavoriteUseCases:
 
         return favorite_out
 
-    async def get_by_client_id(self: 'FavoriteUseCases', db: Session, client_id: UUID4) -> list[FavoriteOut]:
-        favorites = await self.repository.get_by_client_id(db=db, client_id=client_id)
+    async def get_by_client_id(
+        self: 'FavoriteUseCases', db: Session, client_id: UUID4, limit: int, skip: int
+    ) -> list[FavoriteOut]:
+        favorites = await self.repository.get_by_client_id(db=db, client_id=client_id, limit=limit, skip=skip)
 
         if not favorites:
             return []
@@ -86,9 +80,8 @@ class FavoriteUseCases:
 
         for favorite in favorites:
             favorite = favorite[0]
-            endpoint = f'{settings.BASE_URL_PRODUCTS}/{favorite.product_id}'
-            response = await self.client.get(endpoint=endpoint)
-            product = response.content
+
+            product = await self._get_product(product_id=favorite.product_id)
 
             favorite_out = FavoriteOut(
                 **favorite.model_dump(),
@@ -115,6 +108,21 @@ class FavoriteUseCases:
             await self.repository.delete_by_client_and_product(db=db, client_id=client_id, product_id=product_id)
         except NotFoundException:
             raise FavoriteNotFound(f'Favorite with client_id {client_id} and product_id {product_id} not found')
+
+    async def _get_product(self: 'FavoriteUseCases', product_id: int) -> dict[str, Any]:
+        product = get_product_from_cache(product_id=product_id)
+
+        if not product:
+            endpoint = f'{settings.BASE_URL_PRODUCTS}/{product_id}'
+            response = await self.client.get(endpoint=endpoint)
+            product = response.content
+
+            if not product:
+                raise NotFoundException(f'Product with id {product_id} not found')
+
+            set_product_in_cache(product_id=product_id, product_data=product)
+
+        return product
 
 
 async def favorite_usecase() -> FavoriteUseCases:

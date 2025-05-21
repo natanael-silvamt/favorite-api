@@ -8,16 +8,13 @@ run:
 	@poetry run uvicorn main:app --reload
 
 coverage:
-	@poetry run pytest -k 'not test_integration' --cov=apps --cov=src --cov-report=term-missing --cov-report=xml ./tests/
+	@poetry run pytest --cov=apps --cov=src --cov-report=term-missing --cov-report=xml ./tests/
 
 test:
-	@poetry run pytest -k 'not test_integration'
+	@poetry run pytest
 
 test-matching:
 	@poetry run pytest -s -rx -k $(Q) src ./tests/
-
-integration-test:
-	@poetry run pytest -k "integration"
 
 bandit:
 	@poetry run bandit -r -f custom app

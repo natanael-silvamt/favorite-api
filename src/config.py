@@ -46,5 +46,8 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
 
+    REDIS_HOST: str
+    REDIS_PORT: int
+
 
 settings = Settings()  # type: ignore

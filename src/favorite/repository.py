@@ -20,8 +20,10 @@ class FavoriteRepository(RepositoryBase):
 
         return False if not result else True
 
-    async def get_by_client_id(self: 'FavoriteRepository', db: Session, client_id: uuid.UUID) -> list[Favorite]:
-        statement = select(self.model).where(self.model.client_id == client_id)
+    async def get_by_client_id(
+        self: 'FavoriteRepository', db: Session, client_id: uuid.UUID, limit: int, skip: int
+    ) -> list[Favorite]:
+        statement = select(self.model).where(self.model.client_id == client_id).offset((skip - 1) * limit).limit(limit)
 
         result = await db.exec(statement)
         result = result.all()

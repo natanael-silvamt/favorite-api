@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, status
+from fastapi import APIRouter, Body, Query, status
 from fastapi.exceptions import HTTPException
 from pydantic import UUID4
 
@@ -62,8 +62,10 @@ async def get_by_client_id(
     use_case: FavoriteUseCaseDependency,
     client_id: UUID4,
     _: CurrentUserDependency,
+    skip: int = Query(1, ge=0),
+    limit: int = Query(10, le=1000),
 ) -> list[FavoriteOut] | list:
-    favorites = await use_case.get_by_client_id(db=session, client_id=client_id)
+    favorites = await use_case.get_by_client_id(db=session, client_id=client_id, limit=limit, skip=skip)
 
     return favorites
 
