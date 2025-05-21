@@ -3,7 +3,7 @@ version: '3.8'
 services:
   api_service:
     build: .
-    command: bash -c "pip install --upgrade pip && pip install poetry && poetry config virtualenvs.create false && poetry install --no-root && poetry run uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    command: bash -c "pip install --upgrade pip && pip install poetry && poetry config virtualenvs.create false && poetry install --no-root && poetry run alembic upgrade head && poetry run uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
       - ./:/app
     ports:
@@ -12,6 +12,9 @@ services:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: 12345
       POSTGRES_DB: favorites_db
+    depends_on:
+      - postgres
+      - redis
 
   postgres:
     image: postgres:15-alpine
